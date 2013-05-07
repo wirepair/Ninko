@@ -1,0 +1,64 @@
+--- reader.orig.h	2013-05-03 01:58:17.594567600 +0900
++++ reader.hex.h	2013-05-03 02:06:08.264780100 +0900
+@@ -485,6 +485,7 @@
+ 		Stream s = stream; // Local copy for optimization
+ 		// Parse minus
+ 		bool minus = false;
++		bool isHex = false;
+ 		if (s.Peek() == '-') {
+ 			minus = true;
+ 			s.Take();
+@@ -526,12 +527,52 @@
+ 			return;
+ 		}
+ 
++		if (s.Peek() == 'x') {
++			s.Take();
++			minus = false;
++			isHex = true;
++			int count = 0;
++			while ( s.Peek() >= '0' && s.Peek() <= '9' || s.Peek() >= 'A' && s.Peek() <= 'F' || s.Peek() >= 'a' && s.Peek() <= 'f') {
++				if (count == 8) { 
++					try64bit = true;
++					break;
++				}
++				Ch c = s.Take();
++				i <<= 4;
++				i += c;
++				if (c >= '0' && c <= '9')
++					i -= '0';
++				else if (c >= 'A' && c <= 'F')
++					i -= 'A' - 10;
++				else if (c >= 'a' && c <= 'f')
++					i -= 'a' - 10;
++				count++;
++			}
++		}
+ 		// Parse 64bit int
+ 		uint64_t i64 = 0;
+ 		bool useDouble = false;
+ 		if (try64bit) {
+ 			i64 = i;
+-			if (minus) 
++			if (isHex) {
++				int count = 0;
++				while ( s.Peek() >= '0' && s.Peek() <= '9' || s.Peek() >= 'A' && s.Peek() <= 'F' || s.Peek() >= 'a' && s.Peek() <= 'f') {
++					if (count == 8) {
++						RAPIDJSON_PARSE_ERROR("Value too large.", stream.Tell());
++						return;
++					}
++					Ch c = s.Take();
++					i64 <<= 4;
++					i64 += c;
++					if (c >= '0' && c <= '9')
++						i64 -= '0';
++					else if (c >= 'A' && c <= 'F')
++						i64 -= 'A' - 10;
++					else if (c >= 'a' && c <= 'f')
++						i64 -= 'a' - 10;
++					count++;
++				}
++			} else if (minus) 
+ 				while (s.Peek() >= '0' && s.Peek() <= '9') {					
+ 					if (i64 >= 922337203685477580uLL) // 2^63 = 9223372036854775808
+ 						if (i64 != 922337203685477580uLL || s.Peek() > '8') {
