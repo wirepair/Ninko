@@ -36,7 +36,7 @@ Note "calls" can mean any type, direct or indirect, jmp, jz, call, ret etc.
 	"data_end": 0x43E78,
 	"data_ignore": [0x2e330,0x3197a,0x2e068]
 }
-
+```
 ###Running the tool
 C:\pin> pin -t Ninko.dll -c ninko.config -- D:\tools\nc.exe
 
