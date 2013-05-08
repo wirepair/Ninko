@@ -18,7 +18,7 @@ VOID ShowN(THREADID threadid, const char * disasm, ADDRINT eip, UINT32 size, VOI
         x = b;
 	}
     PIN_SafeCopy( x, static_cast<UINT8*>(ea), size );
-	fprintf(g_outfile, "WR [%d] 0x%lx %s ; [0x%lx] = ", threadid, eip, disasm, ea);
+	fprintf(g_outfile, "WR [tid:%d] eip:0x%lx %s ; [ea:0x%lx] = ", threadid, eip, disasm, ea);
     for ( UINT32 i = 0; i < size; i++ )
     {
 		fprintf(g_outfile, "%02x", static_cast<UINT32>(x[size-i-1]));
@@ -31,7 +31,7 @@ VOID ShowN(THREADID threadid, const char * disasm, ADDRINT eip, UINT32 size, VOI
 	{
         delete [] x;
 	}
-	fprintf(g_outfile, " [%d]\r\n", size);
+	fprintf(g_outfile, " [size:%d]\r\n", size);
 }
 
 void UpdateIgnoreAddress( ADDRINT base, rapidjson::Value *ignore, const std::string type)

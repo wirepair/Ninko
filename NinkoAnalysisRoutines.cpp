@@ -80,15 +80,28 @@ VOID SimpleWriteLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc )
 		IARG_THREAD_ID, 
 		IARG_MEMORYWRITE_EA, 
 		IARG_END);
-
-    INS_InsertThenCall(ins, 
-		IPOINT_AFTER, // note we want AFTER so like, we can see what was written.
-		AFUNPTR(LogMemoryWrite), 
-		IARG_THREAD_ID, 
-		IARG_MEMORYWRITE_SIZE, 
-		IARG_PTR, disasm, // disassembled string
-		IARG_INST_PTR, // address of instruction
-		IARG_END);
+	if (INS_HasFallThrough(ins))
+    {
+		INS_InsertThenCall(ins, 
+			IPOINT_AFTER, // note we want AFTER so like, we can see what was written.
+			AFUNPTR(LogMemoryWrite), 
+			IARG_THREAD_ID, 
+			IARG_MEMORYWRITE_SIZE, 
+			IARG_PTR, disasm, // disassembled string
+			IARG_INST_PTR, // address of instruction
+			IARG_END);
+	}
+	if (INS_IsBranchOrCall(ins))
+	{
+		INS_InsertThenCall(ins, 
+			IPOINT_TAKEN_BRANCH, // note we want AFTER so like, we can see what was written.
+			AFUNPTR(LogMemoryWrite), 
+			IARG_THREAD_ID, 
+			IARG_MEMORYWRITE_SIZE, 
+			IARG_PTR, disasm, // disassembled string
+			IARG_INST_PTR, // address of instruction
+			IARG_END);
+	}
 }
 
 VOID FilteredCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc )
