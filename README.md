@@ -1,5 +1,8 @@
 #Ninko 
-Ninko is a PIN tool created to aid in instrumenting obfuscated code. It works by logging only calls and writes specified for an exact range. This helps in limiting the amount of information you need to wade through to understand how a binary may or may not be working.
+Ninko is a PIN tool created to aid in instrumenting x86 obfuscated code. It works by logging only calls and writes specified for an exact range. This helps in limiting the amount of information you need to wade through to understand how a binary may or may not be working.
+
+#Unsupported
+x64 :( Feel free to submit patches!
 
 #Usage
 Ninko works off of JSON formatted configuration files. There are a few things you must know about your binary before you can begin.
