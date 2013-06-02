@@ -9,6 +9,8 @@
 extern FILE *g_outfile;
 extern ninko_t g_vars;
 
+VOID StartLogging( ADDRINT address );
+VOID StopLogging( ADDRINT address );
 
 VOID LogCall( THREADID threadID, ADDRINT address, const char * disasm, ADDRINT target, BOOL taken );
 

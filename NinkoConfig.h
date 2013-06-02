@@ -10,6 +10,7 @@ using namespace std;
 
 typedef struct ninko_s {
 	string image_name;
+	bool logging;
 	bool hook_functions;
 	bool ignore_internal_calls;
 	bool dont_log_calls;
@@ -18,9 +19,12 @@ typedef struct ninko_s {
 	ADDRINT code_end;
 	ADDRINT data_start;
 	ADDRINT data_end;
-	//ADDRINT stop_log_on_exec;
+	ADDRINT stop_log_on_exec;
+	ADDRINT start_log_on_exec;
 	rapidjson::Value* code_ignore;
 	rapidjson::Value* data_ignore;
+	rapidjson::Value* code_add;
+	rapidjson::Value* data_add;
 } ninko_t;
 
 class NinkoConfig {

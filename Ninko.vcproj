@@ -112,7 +112,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copied pin tool to directory."
-				CommandLine=""
+				CommandLine="copy c:\source\pin-2.12-58423-msvc9-windows\source\tools\Ninko\Debug\Ninko.dll C:\tools\pin\Ninko.dll"
 			/>
 		</Configuration>
 		<Configuration

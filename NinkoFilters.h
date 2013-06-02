@@ -6,6 +6,8 @@
 extern FILE *g_outfile;
 extern ninko_s g_vars;
 
+ADDRINT IsStartLoggingLoc( ADDRINT ins );
+ADDRINT IsStopLoggingLoc( ADDRINT ins );
 ADDRINT IsNotInExactRange( ADDRINT writeAddress );
 ADDRINT IsInstructionInRange( ADDRINT ins );
 ADDRINT IsIgnored( ADDRINT ins, rapidjson::Value *ignore );

@@ -16,12 +16,16 @@ Note "calls" can mean any type, direct or indirect, jmp, jz, call, ret etc.
 * "dont_log_calls" - true = Ignore logging calls, false = Log.
 * "dont_log_writes" - true = Ignore logging writes, false = Log.
 * "ignore_internal_calls" - true = We don't care about calls that occur with in the code range we are monitoring. 
+* "start_log_on_exec" - Turns on logging once this instruction is called, no logging will occur until it is hit.
+* "stop_log_on_exec" - Shuts off logging once this instruction is called.
 * "code_start" - The offset of where the code begins. Do not specify the base address as this will be added to the offset automatically when the module loads.
-* "code_end" - The offset of where the code ends. Same as above
+* "code_end" - The offset of where the code ends. Same as above.
 * "code_ignore" - An array of offsets of an instruction we want to ignore helpful for when a certain instruction is called excessively.
+* "code_add" - Arbitrary addresses to have calls added to logging.
 * "data_start" - The offset of where the data writes you care about start. 
 * "data_end" - The offset of where the data writes you care about end.
 * "data_ignore" - An array of offsets of addresses where writes occur that you don't want logged."
+* "data_add" - Arbitrary addresses to have write calls added to logging.
 
 ### Example configuration file
 ```javascript
@@ -35,9 +39,11 @@ Note "calls" can mean any type, direct or indirect, jmp, jz, call, ret etc.
 	"code_start": 0x2B08C,
 	"code_end": 0x43E78,
 	"code_ignore": [0x2e333,0x2fde7,0x2f1cc,0x2ed19],
+	"code_add": [0x2b000],
 	"data_start": 0x2022C,
 	"data_end": 0x43E78,
 	"data_ignore": [0x2e330,0x3197a,0x2e068]
+	"data_add": [0x20218]
 }
 ```
 ###Running the tool

@@ -34,31 +34,41 @@ VOID ShowN(THREADID threadid, const char * disasm, ADDRINT eip, UINT32 size, VOI
 	fprintf(g_outfile, " [size:%d]\r\n", size);
 }
 
-void UpdateIgnoreAddress( ADDRINT base, rapidjson::Value *ignore, const std::string type)
+void UpdateBaseAddress( ADDRINT base, rapidjson::Value *val, const std::string msg, const std::string value_type)
 {
-	for (rapidjson::Value::ValueIterator itr = ignore->Begin(); itr != ignore->End(); ++itr)
+	for (rapidjson::Value::ValueIterator itr = val->Begin(); itr != val->End(); ++itr)
 	{		
 		if ( itr->IsUint() )
 		{
 			itr->SetUint( base + itr->GetUint() );
-			fprintf(g_outfile, "Ignoring %s @ 0x%lx\r\n", type.c_str(), itr->GetUint());
+			fprintf(g_outfile, "%s %s @ 0x%lx\r\n", msg.c_str(), value_type.c_str(), itr->GetUint());
 		}
 		else if (itr->IsUint64() )
 		{
 			itr->SetUint64( base + itr->GetUint64() );
-			fprintf(g_outfile, "Ignoring 64 %s @ 0x%lx\r\n", type.c_str(), itr->GetUint64());
+			fprintf(g_outfile, "%s 64 %s @ 0x%lx\r\n", msg.c_str(), value_type.c_str(), itr->GetUint64());
 		} 
 	}
 }
 
+void UpdateDataAdd( ADDRINT base )
+{
+	UpdateBaseAddress( base, g_vars.data_add, "Adding", "data" );
+}
+
+void UpdateCodeAdd( ADDRINT base )
+{
+	UpdateBaseAddress( base, g_vars.code_add, "Adding", "code" );
+}
+
 void UpdateIgnoredCode( ADDRINT base )
 {
-	UpdateIgnoreAddress( base, g_vars.code_ignore, "code" );
+	UpdateBaseAddress( base, g_vars.code_ignore, "Ignoring", "code" );
 }
 
 void UpdateIgnoredData( ADDRINT base )
 {
-	UpdateIgnoreAddress( base, g_vars.data_ignore, "data" );
+	UpdateBaseAddress( base, g_vars.data_ignore, "Ignoring", "data" );
 }
 
 bool compareFiles(const std::string imageName, const std::string targetImage)
@@ -122,7 +132,7 @@ int validateVars()
 	}
 	if ( g_vars.data_start >= g_vars.data_end )
 	{
-		cerr << "ERROR: data start is >= data end.\r\n" << endl;
+		cerr << "ERROR: data start " << g_vars.data_start << " is >= data end " << g_vars.data_end << ".\r\n" << endl;
 		return -1;
 	}
 	return 0;

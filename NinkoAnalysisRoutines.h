@@ -12,6 +12,9 @@ extern ninko_t g_vars;
 VOID ImageLoad( IMG img, VOID *v );
 VOID Instruction( INS ins, VOID *v );
 
+VOID ShouldStartLogging( INS ins, ADDRINT loc );
+VOID ShouldStopLogging( INS ins, ADDRINT loc );
+
 VOID ObfuscationWriteAndCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc );
 
 VOID FilteredCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc );

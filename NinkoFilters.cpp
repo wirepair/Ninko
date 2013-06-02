@@ -1,5 +1,24 @@
 #include "NinkoFilters.h"
 
+ADDRINT IsStartLoggingLoc( ADDRINT ins )
+{
+	if ( ins == g_vars.start_log_on_exec )
+	{
+		return 1;
+	}
+	return 0;
+}
+
+ADDRINT IsStopLoggingLoc( ADDRINT ins )
+{
+	if (ins == g_vars.stop_log_on_exec )
+	{
+		return 1;
+	}
+	return 0;
+}
+
+
 ADDRINT IsWriteIgnored( ADDRINT ins )
 {
 	return IsIgnored( ins, g_vars.data_ignore );
@@ -45,6 +64,26 @@ ADDRINT IsInstructionInRange( ADDRINT ins )
 	{
 		return 1;
 	}
+	if ( g_vars.code_add != NULL )
+	{
+		for (rapidjson::Value::ConstValueIterator itr = g_vars.code_add->Begin(); itr != g_vars.code_add->End(); ++itr)
+		{
+			if ( itr->IsUint() )
+			{
+				if ( ins == static_cast<ADDRINT>(itr->GetUint()) )
+				{
+					return 1;
+				}
+			}
+			else if (itr->IsUint64() )
+			{
+				if ( ins == static_cast<ADDRINT>(itr->GetUint64()) )
+				{
+					return 1;
+				}
+			}
+		}
+	}
 	return 0;
 }
 
@@ -55,11 +94,35 @@ ADDRINT IsInstructionInRange( ADDRINT ins )
  */
 ADDRINT IsWriteInRange( THREADID threadid, VOID * writeAddress )
 {
+	if ( g_vars.data_add != NULL )
+	{
+		for (rapidjson::Value::ConstValueIterator itr = g_vars.data_add->Begin(); itr != g_vars.data_add->End(); ++itr)
+		{
+			if ( itr->IsUint() )
+			{
+				if ( (ADDRINT)writeAddress == static_cast<ADDRINT>(itr->GetUint()) )
+				{
+					CaptureWriteEa( threadid, writeAddress );
+					return 1;
+				}
+			}
+			else if (itr->IsUint64() )
+			{
+				if ( (ADDRINT)writeAddress == static_cast<ADDRINT>(itr->GetUint64()) )
+				{
+					CaptureWriteEa( threadid, writeAddress );
+					return 1;
+				}
+			}
+		}
+	}
+
 	if ( ( !IsWriteIgnored((ADDRINT)writeAddress ) ) && ( (ADDRINT)writeAddress >= g_vars.data_start && (ADDRINT)writeAddress <= g_vars.data_end ) )
 	{
 		CaptureWriteEa( threadid, writeAddress );
 		return 1;
 	}
+	
 	return 0;
 }
 /*

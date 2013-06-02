@@ -19,14 +19,36 @@ VOID ImageLoad( IMG img, VOID *v )
 	{
 		return;
 	}
+
+	// Update vars with base address.
 	g_vars.code_start += base;
 	g_vars.code_end += base;
+
+	if (g_vars.start_log_on_exec != NULL)
+	{
+		g_vars.start_log_on_exec += base;
+	}
+	
+	if (g_vars.stop_log_on_exec != NULL)
+	{
+		g_vars.stop_log_on_exec += base;
+	}
+
+
 	UpdateIgnoredCode( base );
+	if (g_vars.code_add != NULL) 
+	{
+		UpdateCodeAdd( base );
+	}
 	fprintf(g_outfile, "Monitoring calls from code 0x%lx-0x%lx\r\n", g_vars.code_start, g_vars.code_end);
 
 	g_vars.data_start += base;
 	g_vars.data_end += base;			
 	UpdateIgnoredData( base );
+	if (g_vars.data_add != NULL)
+	{
+		UpdateDataAdd( base );
+	}
 	fprintf(g_outfile, "Monitoring data writes from 0x%lx-0x%lx\r\n", g_vars.data_start, g_vars.data_end);
 }
 
@@ -46,11 +68,21 @@ VOID ImageLoad( IMG img, VOID *v )
  */
 VOID ObfuscationWriteAndCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc )
 {
+	if ( g_vars.start_log_on_exec != NULL && IsStartLoggingLoc( loc ) )
+	{
+		ShouldStartLogging( ins, loc );
+	}
+	if ( g_vars.stop_log_on_exec != NULL && IsStopLoggingLoc( loc ) )
+	{
+		ShouldStopLogging( ins, loc );
+	}
+
 	// Make sure the call is in the range we care about, and it's not ignored.
 	if ( IsInstructionInRange( loc ) == 0 || IsCodeIgnored( loc ) == 1 )
 	{
 		return;
 	}
+
 	// make sure we care about even logging writes
 	if ( g_vars.dont_log_writes == false && INS_IsMemoryWrite( ins ) )
 	{
@@ -71,6 +103,25 @@ VOID ObfuscationWriteAndCallLogger( INS ins, VOID *v, const char *disasm, ADDRIN
 		}
 	}	
 }
+
+VOID ShouldStartLogging( INS ins, ADDRINT loc )
+{
+	INS_InsertCall(ins,
+		IPOINT_BEFORE,
+		AFUNPTR(StartLogging),
+		IARG_INST_PTR,
+		IARG_END);
+}
+
+VOID ShouldStopLogging( INS ins, ADDRINT loc )
+{
+	INS_InsertCall(ins,
+		IPOINT_BEFORE,
+		AFUNPTR(StopLogging),
+		IARG_INST_PTR,
+		IARG_END);
+}
+
 VOID SimpleWriteLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc )
 {
 

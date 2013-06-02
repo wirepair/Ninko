@@ -1,5 +1,16 @@
 #include "NinkoInstrumentation.h"
 
+VOID StartLogging( ADDRINT address )
+{
+	g_vars.logging = true;
+	fprintf(g_outfile, "Logging Enabled\r\n");
+}
+
+VOID StopLogging( ADDRINT address )
+{
+	g_vars.logging = false;
+	fprintf(g_outfile, "Logging Disabled\r\n");
+}
 
 /*
  * CallLoggers
@@ -7,8 +18,11 @@
 VOID LogCall( THREADID threadID, ADDRINT address, const char * disasm, 
 			  ADDRINT target, BOOL taken )
 {
+	if (g_vars.logging == false)
+	{
+		return;
+	}
 	// make sure this jump is outside of the obfuscated (preferably into .text)
-	//0x431dab <= 0x42f330 && 0x431dab >= 0x004633ef
 	if ( taken )
 	{
 		fprintf(g_outfile, "CL [tid:%d] eip:0x%lx %s ; target:0x%lx name:%s\r\n",
@@ -30,6 +44,10 @@ VOID CaptureWriteEa(THREADID threadid, VOID * addr)
 VOID LogMemoryWrite(THREADID threadid, UINT32 size, const char * disasm, ADDRINT eip )
 {
 
+	if (g_vars.logging == false)
+	{
+		return;
+	}
     VOID * ea = WriteEa[threadid];
     
     switch(size)

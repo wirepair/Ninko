@@ -19,9 +19,12 @@ INT32 Usage( const std::string err );
 
 VOID ShowN(THREADID threadid, const char * disasm, ADDRINT eip, UINT32 n, VOID *ea );
 
-void UpdateIgnoreAddress( ADDRINT base, rapidjson::Value *ignore);
+void UpdateBaseAddress( ADDRINT base, rapidjson::Value *ignore);
 void UpdateIgnoredCode( ADDRINT base );
 void UpdateIgnoredData( ADDRINT base );
+void UpdateCodeAdd( ADDRINT base );
+void UpdateDataAdd( ADDRINT base );
+
 
 int validateVars();
 bool compareFiles( const std::string imageName, const std::string targetImage );
