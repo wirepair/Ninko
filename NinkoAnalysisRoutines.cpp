@@ -4,192 +4,99 @@
 /* ===================================================================== */
 // Analysis routines
 /* ===================================================================== */
-VOID ImageLoad( IMG img, VOID *v )
+VOID StartLogging( ADDRINT address )
 {
-	ADDRINT base = IMG_LowAddress(img);
-	fprintf(g_outfile, "Loading %s\r\nStart 0x%08x-0x%08x\r\n", IMG_Name(img).c_str(),IMG_LowAddress(img), IMG_HighAddress(img));
+	g_vars.logging = true;
+	fprintf(g_outfile, "Logging Enabled\r\n");
+}
 
-	// hook globally.
-	if ( g_vars.hook_functions == true )
-	{
-		HookFunctions( img );
-	}
-	
-	if ( compareFiles( IMG_Name( img ), g_vars.image_name ) == false)
-	{
-		return;
-	}
-
-	// Update vars with base address.
-	g_vars.code_start += base;
-	g_vars.code_end += base;
-
-	if (g_vars.start_log_on_exec != NULL)
-	{
-		g_vars.start_log_on_exec += base;
-	}
-	
-	if (g_vars.stop_log_on_exec != NULL)
-	{
-		g_vars.stop_log_on_exec += base;
-	}
-
-
-	UpdateIgnoredCode( base );
-	if (g_vars.code_add != NULL) 
-	{
-		UpdateCodeAdd( base );
-	}
-	fprintf(g_outfile, "Monitoring calls from code 0x%lx-0x%lx\r\n", g_vars.code_start, g_vars.code_end);
-
-	g_vars.data_start += base;
-	g_vars.data_end += base;			
-	UpdateIgnoredData( base );
-	if (g_vars.data_add != NULL)
-	{
-		UpdateDataAdd( base );
-	}
-	fprintf(g_outfile, "Monitoring data writes from 0x%lx-0x%lx\r\n", g_vars.data_start, g_vars.data_end);
+VOID StopLogging( ADDRINT address )
+{
+	g_vars.logging = false;
+	fprintf(g_outfile, "Logging Disabled\r\n");
 }
 
 /*
- * ObfuscationWriteAndCallLogger - Main function for setting up our analysis routines.
- * First we check if the instructions are in range and that the code isn't ignored.
- *
- * Logging Writes:
- * Next, we check if we care about writes and that the instruction is indeed a write.
- * Setup a generic writer that validates that the target address to be written to is
- * in range of our data_start - data_end and not ignored.
- *
- * Logging Calls:
- * For calls we have two possibilities, one we want to filter out any jmp/calls that
- * jump into the same code block we monitor. Or two, we don't care where the jmps occur
- * and we just want to log all that occur in our monitored code range (code_start - code_end)
+ * CallLoggers
  */
-VOID ObfuscationWriteAndCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc )
+VOID LogCall( THREADID threadID, ADDRINT address, const char * disasm, 
+			  ADDRINT target, BOOL taken )
 {
-	if ( g_vars.start_log_on_exec != NULL && IsStartLoggingLoc( loc ) )
-	{
-		ShouldStartLogging( ins, loc );
-	}
-	if ( g_vars.stop_log_on_exec != NULL && IsStopLoggingLoc( loc ) )
-	{
-		ShouldStopLogging( ins, loc );
-	}
-
-	// Make sure the call is in the range we care about, and it's not ignored.
-	if ( IsInstructionInRange( loc ) == 0 || IsCodeIgnored( loc ) == 1 )
+	if (g_vars.logging == false)
 	{
 		return;
 	}
-
-	// make sure we care about even logging writes
-	if ( g_vars.dont_log_writes == false && INS_IsMemoryWrite( ins ) )
+	// make sure this jump is outside of the obfuscated (preferably into .text)
+	if ( taken )
 	{
-		string mnemonic = INS_Mnemonic(ins);
-
-		SimpleWriteLogger( ins, v, disasm, loc );
+		fprintf(g_outfile, "CL [tid:%d] eip:0x%lx %s ; target:0x%lx name:%s\r\n",
+				threadID, address, disasm, target,  RTN_FindNameByAddress(target).c_str());
 	}
-	// make sure we care about logging calls
-	if ( g_vars.dont_log_calls == false && INS_IsBranchOrCall( ins ) )
+}
+
+/*
+ * Memory Write Loggers
+ */
+// Shamelessly taken from debugtrace example.
+LOCALVAR VOID *WriteEa[PIN_MAX_THREADS];
+
+VOID CaptureWriteEa(THREADID threadid, VOID * addr)
+{
+    WriteEa[threadid] = addr;
+}
+// Shamelessly taken and slightly modified from debugtrace example.
+VOID LogMemoryWrite(THREADID threadid, UINT32 size, const char * disasm, ADDRINT eip )
+{
+
+	if (g_vars.logging == false)
 	{
-		if ( g_vars.ignore_internal_calls )
-		{
-			FilteredCallLogger( ins, v, disasm, loc );
-		}
-		else 
-		{
-			SimpleCallLogger( ins, v, disasm, loc );
-		}
-	}	
-}
-
-VOID ShouldStartLogging( INS ins, ADDRINT loc )
-{
-	INS_InsertCall(ins,
-		IPOINT_BEFORE,
-		AFUNPTR(StartLogging),
-		IARG_INST_PTR,
-		IARG_END);
-}
-
-VOID ShouldStopLogging( INS ins, ADDRINT loc )
-{
-	INS_InsertCall(ins,
-		IPOINT_BEFORE,
-		AFUNPTR(StopLogging),
-		IARG_INST_PTR,
-		IARG_END);
-}
-
-VOID SimpleWriteLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc )
-{
-
-	INS_InsertIfCall(ins,
-		IPOINT_BEFORE, 
-		AFUNPTR(IsWriteInRange), 
-		IARG_THREAD_ID, 
-		IARG_MEMORYWRITE_EA, 
-		IARG_END);
-	if (INS_HasFallThrough(ins))
+		return;
+	}
+    VOID * ea = WriteEa[threadid];
+    
+    switch(size)
     {
-		INS_InsertThenCall(ins, 
-			IPOINT_AFTER, // note we want AFTER so like, we can see what was written.
-			AFUNPTR(LogMemoryWrite), 
-			IARG_THREAD_ID, 
-			IARG_MEMORYWRITE_SIZE, 
-			IARG_PTR, disasm, // disassembled string
-			IARG_INST_PTR, // address of instruction
-			IARG_END);
-	}
-	if (INS_IsBranchOrCall(ins))
-	{
-		INS_InsertThenCall(ins, 
-			IPOINT_TAKEN_BRANCH, // note we want AFTER so like, we can see what was written.
-			AFUNPTR(LogMemoryWrite), 
-			IARG_THREAD_ID, 
-			IARG_MEMORYWRITE_SIZE, 
-			IARG_PTR, disasm, // disassembled string
-			IARG_INST_PTR, // address of instruction
-			IARG_END);
-	}
+      case 0:
+        break;
+      case 1:
+        {
+            UINT8 x;
+            PIN_SafeCopy(&x, static_cast<UINT8*>(ea), 1);
+			if (x > 0x20 && x < 0x7f)
+			{
+				fprintf(g_outfile, "WR [tid:%d] eip:0x%lx %s ; [ea:0x%lx] = '%c' [size:%d]\r\n", threadid, eip, disasm, ea, x, size);
+			}
+			else
+			{
+				fprintf(g_outfile, "WR [tid:%d] eip:0x%lx %s ; [ea:0x%lx] = 0x%x [size:%d]\r\n", threadid, eip, disasm, ea, x, size);
+			}
+        }
+        break;
+      case 2:
+        {
+            UINT16 x;
+            PIN_SafeCopy(&x, static_cast<UINT16*>(ea), 2);
+			fprintf(g_outfile, "WR [tid:%d] eip:0x%lx %s ; [ea:0x%lx] = 0x%02x [size:%d]\r\n", threadid, eip, disasm, ea, x, size);
+        }
+        break;
+      case 4:
+        {
+            UINT32 x;
+            PIN_SafeCopy(&x, static_cast<UINT32*>(ea), 4);
+			fprintf(g_outfile, "WR [tid:%d] eip:0x%lx %s ; [ea:0x%lx] = 0x%08x [size:%d]\r\n", threadid, eip, disasm, ea, x, size);
+        }
+        break;
+      case 8:
+        {
+            UINT64 x;
+            PIN_SafeCopy(&x, static_cast<UINT64*>(ea), 8);
+			fprintf(g_outfile, "WR [tid:%d] eip:0x%lx %s ; [ea:0x%lx] = 0x%16x [size:%d]\r\n", threadid, eip, disasm, ea, x, size);
+        }
+        break;
+      default:
+        ShowN( threadid, disasm, eip, size, ea );
+        break;
+    }
+
+	fflush(g_outfile);
 }
-
-VOID FilteredCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc )
-{
-	INS_InsertIfCall(ins, 
-		IPOINT_BEFORE, 
-		(AFUNPTR)IsCallInternal, 
-		IARG_BRANCH_TARGET_ADDR,
-		IARG_END);
-
-	INS_InsertThenCall(ins,
-	       IPOINT_BEFORE,
-	       (AFUNPTR)LogCall,
-		   IARG_THREAD_ID, // thread ID of the executing thread
-		   IARG_INST_PTR, // address of instruction
-		   IARG_PTR, disasm, // disassembled string
-	       IARG_BRANCH_TARGET_ADDR,	// target
-	       IARG_BRANCH_TAKEN,		// Non zero if branch is taken
-	       IARG_END);
-}
-
-VOID SimpleCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc )
-{
-	INS_InsertCall(ins,
-		   IPOINT_BEFORE,
-		   (AFUNPTR)LogCall,
-		   IARG_THREAD_ID, // thread ID of the executing thread
-		   IARG_INST_PTR, // address of instruction
-		   IARG_PTR, disasm, // disassembled string
-		   IARG_BRANCH_TARGET_ADDR,	// target
-		   IARG_BRANCH_TAKEN,			// Non zero if branch is taken
-		   IARG_END);
-}
-
-VOID Instruction(INS ins, VOID *v)
-{
-	const char * disasm = dumpInstruction(ins);
-	ADDRINT loc = INS_Address(ins);
-	ObfuscationWriteAndCallLogger( ins, v, disasm, loc );
- }

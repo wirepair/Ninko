@@ -1,7 +1,7 @@
 #pragma once
 #include "pin.H"
 #include "NinkoConfig.h"
-#include "NinkoInstrumentation.h"
+#include "NinkoAnalysisRoutines.h"
 
 extern FILE *g_outfile;
 extern ninko_s g_vars;

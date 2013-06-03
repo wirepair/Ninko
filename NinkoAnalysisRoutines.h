@@ -1,23 +1,18 @@
 #pragma once
 #include "pin.H"
-#include "NinkoInstrumentation.h"
-#include "NinkoFilters.h"
-#include "NinkoHooks.h"
-#include "Utils.h"
+#include <iostream>
+#include <list>
 #include "NinkoConfig.h"
+#include "NinkoFilters.h"
+#include "Utils.h"
 
 extern FILE *g_outfile;
 extern ninko_t g_vars;
 
-VOID ImageLoad( IMG img, VOID *v );
-VOID Instruction( INS ins, VOID *v );
+VOID StartLogging( ADDRINT address );
+VOID StopLogging( ADDRINT address );
 
-VOID ShouldStartLogging( INS ins, ADDRINT loc );
-VOID ShouldStopLogging( INS ins, ADDRINT loc );
+VOID LogCall( THREADID threadID, ADDRINT address, const char * disasm, ADDRINT target, BOOL taken );
 
-VOID ObfuscationWriteAndCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc );
-
-VOID FilteredCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc );
-VOID SimpleCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc );
-
-VOID SimpleWriteLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc );
+VOID CaptureWriteEa(THREADID threadid, VOID * addr);
+VOID LogMemoryWrite(THREADID threadid, UINT32 size, const char * disasm, ADDRINT eip );
