@@ -83,8 +83,6 @@ VOID ObfuscationWriteAndCallLogger( INS ins, VOID *v, const char *disasm, ADDRIN
 	// make sure we care about even logging writes
 	if ( g_vars.dont_log_writes == false && INS_IsMemoryWrite( ins ) )
 	{
-		string mnemonic = INS_Mnemonic(ins);
-
 		SimpleWriteLogger( ins, v, disasm, loc );
 	}
 	// make sure we care about logging calls

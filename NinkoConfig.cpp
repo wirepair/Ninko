@@ -38,10 +38,11 @@ void NinkoConfig::fillVars( ninko_t *vars )
 	vars->code_ignore = getArray( "code_ignore" );
 	vars->code_add = getArray( "code_add" );
 
+	
 	vars->ignore_internal_calls = getBool( "ignore_internal_calls" );
 	vars->dont_log_calls = getBool( "dont_log_calls" );
 	vars->dont_log_writes = getBool( "dont_log_writes" );
-
+	
 	vars->data_start = getAddr( "data_start" );
 	vars->data_end = getAddr( "data_end" );
 	vars->data_ignore = getArray( "data_ignore" );
