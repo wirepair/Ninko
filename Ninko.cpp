@@ -1,7 +1,7 @@
 #include "Ninko.h"
 #include "Utils.h"
 #include "NinkoConfig.h"
-#include "NinkoAnalysisRoutines.h"
+#include "NinkoInstrumentation.h"
 
 /*!
  * The main procedure of the tool.
@@ -50,6 +50,20 @@ int main(int argc, char *argv[])
 	{
 		return 0;
 	}
+
+	if ( g_vars.disable_log_calls == true )
+	{
+		fprintf(g_outfile, "Disabling call logging.\r\n");
+	}
+	if ( g_vars.disable_log_reads == true )
+	{
+		fprintf(g_outfile, "Disabling read logging.\r\n");
+	}
+	if ( g_vars.disable_log_writes == true )
+	{
+		fprintf(g_outfile, "Disabling write logging.\r\n");
+	}
+
 	IMG_AddInstrumentFunction(ImageLoad, 0);
 	
 	INS_AddInstrumentFunction(Instruction, 0);

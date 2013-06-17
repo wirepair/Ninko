@@ -475,15 +475,6 @@
 				>
 			</File>
 		</Filter>
-		<Filter
-			Name="Documents"
-			Filter="txt;doc;html"
-			>
-			<File
-				RelativePath="..\README"
-				>
-			</File>
-		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

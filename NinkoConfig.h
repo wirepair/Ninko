@@ -13,8 +13,9 @@ typedef struct ninko_s {
 	bool logging;
 	bool hook_functions;
 	bool ignore_internal_calls;
-	bool dont_log_calls;
-	bool dont_log_writes;
+	bool disable_log_calls;
+	bool disable_log_writes;
+	bool disable_log_reads;
 	ADDRINT code_start;
 	ADDRINT code_end;
 	ADDRINT data_start;

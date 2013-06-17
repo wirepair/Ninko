@@ -40,9 +40,10 @@ void NinkoConfig::fillVars( ninko_t *vars )
 
 	
 	vars->ignore_internal_calls = getBool( "ignore_internal_calls" );
-	vars->dont_log_calls = getBool( "dont_log_calls" );
-	vars->dont_log_writes = getBool( "dont_log_writes" );
-	
+	vars->disable_log_calls = getBool( "disable_log_calls" );
+	vars->disable_log_writes = getBool( "disable_log_writes" );
+	vars->disable_log_reads = getBool( "disable_log_reads" );
+
 	vars->data_start = getAddr( "data_start" );
 	vars->data_end = getAddr( "data_end" );
 	vars->data_ignore = getArray( "data_ignore" );

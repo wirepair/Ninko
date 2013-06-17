@@ -1,5 +1,5 @@
 #Ninko 
-Ninko is a PIN tool created to aid in instrumenting x86 obfuscated code. It works by logging only calls and writes specified for an exact range. This helps in limiting the amount of information you need to wade through to understand how a binary may or may not be working.
+Ninko is a PIN tool created to aid in instrumenting x86 obfuscated code. It works by logging only calls, writes specified for an exact range. This helps in limiting the amount of information you need to wade through to understand how a binary may or may not be working.
 
 #Unsupported
 x64 :( Feel free to submit patches!
@@ -13,8 +13,9 @@ Note "calls" can mean any type, direct or indirect, jmp, jz, call, ret etc.
 * "image_name" - The image name: One would hope you'd know the name of the executable/dll you wish to monitor.
 * "outfile" - Where to save the results to. 
 * "hook_functions" - Whether or not to hook GetProcAddress or any hooks you add to the source.
-* "dont_log_calls" - true = Ignore logging calls, false = Log.
-* "dont_log_writes" - true = Ignore logging writes, false = Log.
+* "disable_log_calls" - true = Do not log calls, false = log them.
+* "disable_log_writes" - true = Do not log writes, false = log them.
+* "disable_log_reads" - true = Do not log reads, false = log them.
 * "ignore_internal_calls" - true = We don't care about calls that occur with in the code range we are monitoring. 
 * "start_log_on_exec" - Turns on logging once this instruction is called, no logging will occur until it is hit.
 * "stop_log_on_exec" - Shuts off logging once this instruction is called.
@@ -33,8 +34,9 @@ Note "calls" can mean any type, direct or indirect, jmp, jz, call, ret etc.
   "image_name": "nc.exe",
 	"outfile": "C:\\source\\pin-latest\\ia32\\bin\\obfusc.log",
 	"hook_functions": true,
-	"dont_log_calls": false,
-	"dont_log_writes": false,
+	"disable_log_calls": false,
+	"disable_log_writes": false,
+	"disable_log_reads": true,
 	"ignore_internal_calls": true,
 	"code_start": 0x2B08C,
 	"code_end": 0x43E78,

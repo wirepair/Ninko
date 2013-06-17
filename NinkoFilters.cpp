@@ -55,34 +55,72 @@ ADDRINT IsIgnored( ADDRINT ins, rapidjson::Value *ignore)
 }
 /*
  * This checks to make sure the instruction is in the range of code we are monitoring.
+ * Note internal_check is for determining if we need to filter internal calls. In this
+ * case we don't want to return our code_add values.
  * Returns 1 if the instruction is in range
  *         0 ins is out of our code range.
  */
-ADDRINT IsInstructionInRange( ADDRINT ins )
+ADDRINT IsInstructionInRange( ADDRINT ins, bool internal_check )
 {
 	if ( ins >= g_vars.code_start && ins <= g_vars.code_end )
 	{
 		return 1;
 	}
+
+	if ( internal_check == true )
+	{
+		return 0;
+	}
+
 	if ( g_vars.code_add != NULL )
 	{
 		for (rapidjson::Value::ConstValueIterator itr = g_vars.code_add->Begin(); itr != g_vars.code_add->End(); ++itr)
 		{
 			if ( itr->IsUint() )
 			{
-				if ( ins == static_cast<ADDRINT>(itr->GetUint()) )
+				if ( ins == static_cast<ADDRINT>( itr->GetUint()) )
+				{
+					fprintf(g_outfile, "ins %x is in range\r\n", ins);
+					return 1;
+				}
+			}
+			else if (itr->IsUint64() )
+			{
+				if ( ins == static_cast<ADDRINT>( itr->GetUint64()) )
+				{
+					return 1;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+ADDRINT IsReadInRange( THREADID threadid, VOID * readAddress )
+{
+	if ( g_vars.data_add != NULL )
+	{
+		for (rapidjson::Value::ConstValueIterator itr = g_vars.data_add->Begin(); itr != g_vars.data_add->End(); ++itr)
+		{
+			if ( itr->IsUint() )
+			{
+				if ( (ADDRINT)readAddress == static_cast<ADDRINT>(itr->GetUint()) )
 				{
 					return 1;
 				}
 			}
 			else if (itr->IsUint64() )
 			{
-				if ( ins == static_cast<ADDRINT>(itr->GetUint64()) )
+				if ( (ADDRINT)readAddress == static_cast<ADDRINT>(itr->GetUint64()) )
 				{
 					return 1;
 				}
 			}
 		}
+	}
+	if( (ADDRINT)readAddress >= g_vars.data_start && (ADDRINT)readAddress <= g_vars.data_end )
+	{
+		return 1;
 	}
 	return 0;
 }
@@ -131,5 +169,5 @@ ADDRINT IsWriteInRange( THREADID threadid, VOID * writeAddress )
  */
 ADDRINT IsCallInternal( ADDRINT callAddress )
 {
-	return !IsInstructionInRange( callAddress );
+	return !IsInstructionInRange( callAddress, true );
 }

@@ -14,5 +14,7 @@ VOID StopLogging( ADDRINT address );
 
 VOID LogCall( THREADID threadID, ADDRINT address, const char * disasm, ADDRINT target, BOOL taken );
 
-VOID CaptureWriteEa(THREADID threadid, VOID * addr);
-VOID LogMemoryWrite(THREADID threadid, UINT32 size, const char * disasm, ADDRINT eip );
+VOID LogMemoryRead( THREADID threadid, VOID * ea, UINT32 size, const char * disasm, ADDRINT eip );
+
+VOID CaptureWriteEa( THREADID threadid, VOID * addr );
+VOID LogMemoryWrite( THREADID threadid, UINT32 size, const char * disasm, ADDRINT eip );

@@ -35,6 +35,64 @@ VOID LogCall( THREADID threadID, ADDRINT address, const char * disasm,
 }
 
 /*
+ * Memory Read Loggers
+ */
+
+VOID LogMemoryRead( THREADID threadid, VOID * ea, UINT32 size, const char * disasm, ADDRINT eip )
+{
+	if (g_vars.logging == false)
+	{
+		return;
+	}
+
+	switch(size)
+    {
+      case 0:
+        break;
+      case 1:
+        {
+            UINT8 x;
+            PIN_SafeCopy(&x, static_cast<UINT8*>(ea), 1);
+			if (x > 0x20 && x < 0x7f)
+			{
+				fprintf(g_outfile, "RD [tid:%d] eip:0x%lx %s ; [ea:0x%lx] = '%c' [size:%d]\r\n", threadid, eip, disasm, ea, x, size);
+			}
+			else
+			{
+				fprintf(g_outfile, "RD [tid:%d] eip:0x%lx %s ; [ea:0x%lx] = 0x%x [size:%d]\r\n", threadid, eip, disasm, ea, x, size);
+			}
+        }
+        break;
+      case 2:
+        {
+            UINT16 x;
+            PIN_SafeCopy(&x, static_cast<UINT16*>(ea), 2);
+			fprintf(g_outfile, "RD [tid:%d] eip:0x%lx %s ; [ea:0x%lx] = 0x%02x [size:%d]\r\n", threadid, eip, disasm, ea, x, size);
+        }
+        break;
+      case 4:
+        {
+            UINT32 x;
+            PIN_SafeCopy(&x, static_cast<UINT32*>(ea), 4);
+			fprintf(g_outfile, "RD [tid:%d] eip:0x%lx %s ; [ea:0x%lx] = 0x%08x [size:%d]\r\n", threadid, eip, disasm, ea, x, size);
+        }
+        break;
+      case 8:
+        {
+            UINT64 x;
+            PIN_SafeCopy(&x, static_cast<UINT64*>(ea), 8);
+			fprintf(g_outfile, "RD [tid:%d] eip:0x%lx %s ; [ea:0x%lx] = 0x%16x [size:%d]\r\n", threadid, eip, disasm, ea, x, size);
+        }
+        break;
+      default:
+		  fprintf(g_outfile, "RD [tid:%d] eip:0x%lx %s ; (UNKNOWN SIZE)\r\n", threadid, eip, disasm);
+        break;
+    }
+
+	fflush(g_outfile);
+}
+
+/*
  * Memory Write Loggers
  */
 // Shamelessly taken from debugtrace example.
@@ -45,7 +103,7 @@ VOID CaptureWriteEa(THREADID threadid, VOID * addr)
     WriteEa[threadid] = addr;
 }
 // Shamelessly taken and slightly modified from debugtrace example.
-VOID LogMemoryWrite(THREADID threadid, UINT32 size, const char * disasm, ADDRINT eip )
+VOID LogMemoryWrite( THREADID threadid, UINT32 size, const char * disasm, ADDRINT eip )
 {
 
 	if (g_vars.logging == false)

@@ -21,3 +21,5 @@ VOID FilteredCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc );
 VOID SimpleCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc );
 
 VOID SimpleWriteLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc );
+
+VOID SimpleReadLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc, bool read_2 );

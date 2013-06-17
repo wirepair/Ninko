@@ -75,18 +75,34 @@ VOID ObfuscationWriteAndCallLogger( INS ins, VOID *v, const char *disasm, ADDRIN
 	}
 
 	// Make sure the call is in the range we care about, and it's not ignored.
-	if ( IsInstructionInRange( loc ) == 0 || IsCodeIgnored( loc ) == 1 )
+	if ( IsInstructionInRange( loc, false ) == 0 || IsCodeIgnored( loc ) == 1 )
 	{
 		return;
 	}
 
 	// make sure we care about even logging writes
-	if ( g_vars.dont_log_writes == false && INS_IsMemoryWrite( ins ) )
-	{
+
+	if ( g_vars.disable_log_writes == false && INS_IsMemoryWrite( ins ) )
+	{	
 		SimpleWriteLogger( ins, v, disasm, loc );
 	}
+
+	// For reads
+	if ( g_vars.disable_log_reads == false )
+	{
+		if ( INS_IsMemoryRead(ins) && !INS_IsPrefetch(ins) )
+		{
+			SimpleReadLogger( ins, v, disasm, loc, false );
+		} 
+		else if (INS_HasMemoryRead2(ins) )
+		{
+			SimpleReadLogger( ins, v, disasm, loc, true );
+		}
+	}
+
+
 	// make sure we care about logging calls
-	if ( g_vars.dont_log_calls == false && INS_IsBranchOrCall( ins ) )
+	if ( g_vars.disable_log_calls == false && INS_IsBranchOrCall( ins ) )
 	{
 		if ( g_vars.ignore_internal_calls )
 		{
@@ -148,6 +164,36 @@ VOID SimpleWriteLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc )
 			IARG_INST_PTR, // address of instruction
 			IARG_END);
 	}
+}
+
+VOID SimpleReadLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc, bool read_2 )
+{
+	int read_ea = IARG_MEMORYREAD_EA;
+
+	if ( read_2 )
+	{
+		read_ea = IARG_MEMORYREAD2_EA;
+	}
+
+
+	INS_InsertIfCall(ins,
+		IPOINT_BEFORE, 
+		AFUNPTR(IsReadInRange), 
+		IARG_THREAD_ID, 
+		read_ea, 
+		IARG_END);
+	
+	INS_InsertThenCall(ins, 
+			IPOINT_BEFORE, 
+			AFUNPTR(LogMemoryRead), 
+			IARG_THREAD_ID, 
+			read_ea,
+			IARG_MEMORYREAD_SIZE, 
+			IARG_PTR, disasm, // disassembled string
+			IARG_INST_PTR, // address of instruction
+			IARG_END);
+	
+	
 }
 
 VOID FilteredCallLogger( INS ins, VOID *v, const char *disasm, ADDRINT loc )
