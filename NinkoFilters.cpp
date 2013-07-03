@@ -80,7 +80,6 @@ ADDRINT IsInstructionInRange( ADDRINT ins, bool internal_check )
 			{
 				if ( ins == static_cast<ADDRINT>( itr->GetUint()) )
 				{
-					fprintf(g_outfile, "ins %x is in range\r\n", ins);
 					return 1;
 				}
 			}

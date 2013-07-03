@@ -38,9 +38,18 @@ VOID ImageLoad( IMG img, VOID *v )
 		UpdateCodeAdd( base );
 	}
 	fprintf(g_outfile, "Monitoring calls from code 0x%lx-0x%lx\r\n", g_vars.code_start, g_vars.code_end);
+	
+	// 0 means we want to log all data writes
+	if (g_vars.data_start != 0) 
+	{
+		g_vars.data_start += base;
+	}
+	// 0xffffffff means we want to log all data writes
+	if (g_vars.data_end != 0xFFFFFFFF)
+	{
+		g_vars.data_end += base;
+	}
 
-	g_vars.data_start += base;
-	g_vars.data_end += base;			
 	UpdateIgnoredData( base );
 	if (g_vars.data_add != NULL)
 	{
