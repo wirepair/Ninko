@@ -1,13 +1,14 @@
-#Ninko 
+# Ninko 
 Ninko is a PIN tool created to aid in instrumenting x86 obfuscated code. It works by logging only calls, writes specified for an exact range. This helps in limiting the amount of information you need to wade through to understand how a binary may or may not be working.
 
-#Unsupported
+# Unsupported
 x64 :( Feel free to submit patches!
 
 #Usage
+
 Ninko works off of JSON formatted configuration files. There are a few things you must know about your binary before you can begin.
 
-##Ninko Configuration Fields
+## Ninko Configuration Fields
 Note "calls" can mean any type, direct or indirect, jmp, jz, call, ret etc.
 
 * "image_name" - The image name: One would hope you'd know the name of the executable/dll you wish to monitor.
@@ -48,10 +49,10 @@ Note "calls" can mean any type, direct or indirect, jmp, jz, call, ret etc.
 	"data_add": [0x20218]
 }
 ```
-###Running the tool
+### Running the tool
 C:\pin> pin -t Ninko.dll -c ninko.config -- D:\tools\nc.exe
 
-###Sample Output
+### Sample Output
 ```
 Validating config...
 Loading D:\tools\nc.exe
