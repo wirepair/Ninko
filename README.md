@@ -4,7 +4,7 @@ Ninko is a PIN tool created to aid in instrumenting x86 obfuscated code. It work
 # Unsupported
 x64 :( Feel free to submit patches!
 
-#Usage
+# Usage
 
 Ninko works off of JSON formatted configuration files. There are a few things you must know about your binary before you can begin.
 
